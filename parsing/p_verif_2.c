@@ -90,10 +90,20 @@ int	v_last_el_pipe(char	*str)
 }
 
 
+
+
+
+
+
+
+
 int	ft_verif_all(t_data_mini *data)
 {
 	if (cmd_empty(data->cmd) == 1)
+	{
+		free(data->cmd);
 		return (0);
+	}
 	while (v_quote(data->cmd, '\'', '\"') == 0
 		|| v_quote(data->cmd, '\"', '\'') == 0)
 	{
@@ -106,8 +116,8 @@ int	ft_verif_all(t_data_mini *data)
 		return (0);
 	while (v_last_el_pipe(data->cmd) == 1)
 	{
-		printf("okkkk\n");
 		manage_pipe(data);
+		printf("ok\n");
 		return (1);
 	}
 	return (2);

@@ -32,6 +32,11 @@ typedef struct cmd
 	char			*cmd_path;
 	int			fd[2];
 	int			top_redir;
+	char		**cmd_redir;
+	int			fd_in;
+	int			fd_out;
+	int         redir_in;
+	int			redir_out;
 }   t_cmd;
 
 typedef struct minishell{
@@ -78,12 +83,16 @@ char    *get_cmd_path(char **env, char    *cmd);
 char   *ft_strjoin_3(char *s1 , char *s2, char *s3);
 char	*ft_strcpy(char *dst, const char *src);
 void check_leaks();
-char    *manage_dollar(t_data_mini *data);
+void    manage_dollar(t_data_mini *data);
 char    *ft_strjoin_33(char *s1 , char *s2, char *s3);
 void	ft_free_tab(char **tab);
-
-
-
+void manage_redir_out(t_cmd *cmd);
+int	is_redir(char **list_token);
+char	**get_cmd_redir(char **list_token);
+void	ft_open_close_pipe_red(t_cmd *cmd , int i , int nb_cmd);
+int	check_if_redir(t_data_mini *data);
+char	*rl_gets(char *prompt);
+void close_all_pipe(t_cmd *cmd , int i);
 // int main()
 // {
 // 	t_data_mini mini;

@@ -132,7 +132,7 @@ void initial_vars(int *i , int *ii ,char *new_cmd)
 }
 
 
-char    *manage_dollar(t_data_mini *data)
+void    manage_dollar(t_data_mini *data)
 {
     int i = 0;
     int ii = 0;

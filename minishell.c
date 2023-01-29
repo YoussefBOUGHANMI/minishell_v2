@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+
 #include "minishell.h"
 
 #include <signal.h>
@@ -17,10 +18,33 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
 
 
 
-void close_all_pipe(t_cmd *cmd , int i){
+char	*rl_gets(char *prompt)
+{
+	static char	*line_read = (char *) NULL;
+
+	if (line_read)
+	{
+		free(line_read);
+		line_read = (char *) NULL;
+	}
+	line_read = readline(prompt);
+
+	return (line_read);
+}
+
+
+
+
+void close_all_pipe(t_cmd *cmd , int i)
+{
 	int p;
 	t_cmd *current;
 
@@ -56,11 +80,23 @@ void	ft_open_close_pipe(t_cmd *cmd , int i , int nb_cmd)
 	}
 } 
 
+
+
+
+
+
 void	ft_run_pipe(t_data_mini *data , int i)
 {
-	char *arg[] = {data->list_cmd->list_token[0] , NULL};
-	ft_open_close_pipe(data->list_cmd , i , data->nb_cmd);
-    execve(data->list_cmd->cmd_path, (char *const *)data->list_cmd->list_token , data->env);
+	if(data->list_cmd->top_redir == 1)
+	{
+		ft_open_close_pipe_red(data->list_cmd , i , data->nb_cmd);
+		execve(data->list_cmd->cmd_path, (char *const *)data->list_cmd->cmd_redir , data->env);
+	}
+	else
+	{
+		ft_open_close_pipe(data->list_cmd , i , data->nb_cmd);
+    	execve(data->list_cmd->cmd_path, (char *const *)data->list_cmd->list_token , data->env);
+	}
 }
 
 
@@ -79,35 +115,20 @@ void    ft_command(t_data_mini *data)
 		pipe(data->list_cmd->fd);
 		pid = fork();
 	    if(pid== 0)
-		{
 			ft_run_pipe(data , i);
-		}
 		else if (pid < 0)
 			fork_error = 1;
         data->list_cmd = data->list_cmd->next;
         i++;
     }
-	close_all_pipe(data->list_cmd, i -1 );
+	if(i != 1)
+		close_all_pipe(data->list_cmd, i -1 );
     while (waitpid(0, NULL, 0) != -1);
 	if(fork_error == 1)
 		printf("zsh: fork failed: resource temporarily unavailable\n");
 }
 
 
-
-char	*rl_gets(char *prompt)
-{
-	static char	*line_read = (char *) NULL;
-
-	if (line_read)
-	{
-		free(line_read);
-		line_read = (char *) NULL;
-	}
-	line_read = readline(prompt);
-
-	return (line_read);
-}
 
 
 
@@ -118,37 +139,36 @@ int		ft_find_path(t_data_mini *data)
 	i=0;
 	while(i<data->nb_cmd)
 	{
-		if(get_cmd_path(data->env, data->list_cmd->list_token[0]) == NULL)
+		data->list_cmd->cmd_path = get_cmd_path(data->env, data->list_cmd->list_token[0]);
+		if(data->list_cmd->cmd_path == NULL)
 		{
 			printf("command not found %s\n" , data->list_cmd->list_token[0]);
 			return(0);
 		}
-		data->list_cmd->cmd_path = get_cmd_path(data->env, data->list_cmd->list_token[0]);
 		data->list_cmd = data->list_cmd->next;
 		i++;
 	}
 	return(1);
 }
 
-
-
-ft_clean_all(t_data_mini *data)
+void ft_clean_all(t_data_mini *data)
 {
 	int i = 0;
 	t_cmd *current;
 
+	ft_free_tab(data->list_token);
 	while(i < data->nb_cmd - 1 )
 	{
 		current = data->list_cmd;
-		data->list_cmd = data->list_cmd->next;
-		ft_free_tab(current->list_token);
-		//free(current->list_token);
+		free(current->cmd_path);
+		free(current->list_token);
 		free(current);
+		data->list_cmd = data->list_cmd->next;
 		i++;
 	}
-	ft_free_tab(data->list_cmd->list_token);
+	free(data->list_cmd->cmd_path);
+	free(data->list_cmd->list_token);
 	free(data->list_cmd);
-	free(data->list_token);
 }
 
 
@@ -163,10 +183,13 @@ void	run_shell(t_data_mini *data)
 
 	data->nb_cmd = get_nb_cmd(data->list_token);
 	data->list_cmd = init_all_cmd(data->nb_cmd, data->list_token);
-	/*ft_clean_quotes(data);
-	
+	printf("%s \n" , data->list_cmd->list_token[0]);
+	ft_clean_quotes(data);
+	if(check_if_redir(data) == 0)
+		return;
+
 	if(ft_find_path(data) == 1)
-		ft_command(data);*/
+		ft_command(data);
 	ft_clean_all(data);
 }
 
@@ -184,10 +207,3 @@ int	main(int ac, char **av, char **env)
 	}
 	return (0);
 }
-
-
-	// if (line_read && *line_read)data->list_cmd->
-	// {
-	// add_history(data->cmd);
-	// 	ft_command(cmds);
-	// }

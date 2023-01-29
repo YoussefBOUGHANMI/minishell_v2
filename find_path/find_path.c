@@ -143,7 +143,7 @@ char    *get_cmd_path(char **env, char    *cmd)
         if (result == 0)
         {
             ft_free_tab(ev);
-            return (path);
+            return(path);
         }
         i++;
         free(path);

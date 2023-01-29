@@ -46,6 +46,12 @@ void ft_clean_quotes(t_data_mini *data)
 	while(i++<data->nb_cmd)
 	{
 		ii = 0;
+		if(ft_strcmp(data->list_cmd->list_token[ii] , "\"\"") == 0 || 
+				ft_strcmp(data->list_cmd->list_token[ii] , "\'\'") == 0 )
+		{
+			data->list_cmd->list_token[ii] = malloc(20);
+			data->list_cmd->list_token[ii++] = " ";
+		}
 		while(data->list_cmd->list_token[ii])
 			drop_quotes(data->list_cmd->list_token[ii++]);
 		data->list_cmd = data->list_cmd->next;
