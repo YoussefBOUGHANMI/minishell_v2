@@ -14,14 +14,16 @@
 # define MINISHELL_H
 # include <string.h>
 # include <sys/types.h>
+# include <sys/wait.h>
 # include <unistd.h>
 # include <stdlib.h>
 # include <stdio.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+# include <termios.h>
 #include <signal.h>
+#include <string.h>
 #include <fcntl.h>
-#include <signal.h>
 # define CHAR " \t"
 
 
@@ -40,6 +42,7 @@ typedef struct cmd
 	int			fd_out;
 	int         redir_in;
 	int			redir_out;
+	int			top_path;
 }   t_cmd;
 
 typedef struct minishell{
@@ -99,6 +102,8 @@ int	check_if_redir(t_data_mini *data);
 char	*rl_gets(char *prompt);
 void close_all_pipe(t_cmd *cmd , int i);
 char	*ft_strdup(const char *src);
+int		ft_find_path(t_data_mini *data);
+char	*ft_itoa(int nb);
 
 
 // builtins
@@ -109,11 +114,17 @@ int	ft_run_builtin_2(t_data_mini *data);
 int ft_search_pwd(t_data_mini *data, char *var);
 void	ft_cd(t_data_mini *data);
 void ft_echo(t_data_mini *data);
-void	ft_env(char **env);
+void	ft_env(t_data_mini *data);
 void	ft_pwd(t_data_mini *data);
 void ft_export(t_data_mini *data);
 char **new_env(t_data_mini *data, char *var);
 void ft_unset(t_data_mini *data);
+char *get_var_to_add(char   *str);
+int verif_token_export(char *token);
+void    ft_export_var(t_data_mini *data ,char *token);
+
+
+void	termios(int ctl);
 
 // int main()
 // {

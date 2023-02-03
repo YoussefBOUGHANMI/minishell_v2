@@ -34,4 +34,5 @@ void ft_echo(t_data_mini *data)
 	}
 	else
 		printf("\n");
+	exit(0);
 }

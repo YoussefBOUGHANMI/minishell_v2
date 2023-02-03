@@ -97,6 +97,40 @@ void initial_vars(int *i , int *ii ,char *new_cmd)
     new_cmd = NULL;
 }
 
+void    manage_dollar_interog(t_data_mini *data)
+{
+    int i;
+    int ii;
+    int iii;
+    char *new_cmd;
+    char *nb;
+
+    i = 0;
+    ii = 0;
+    new_cmd = malloc((ft_strlen(data->cmd) * 2 + 1) * sizeof(char));
+    while(data->cmd[i])
+    {
+        if(data->cmd[i] == '$' && data->cmd[i+1] == '?')
+        {
+            iii = 0;
+            i = i + 2;
+            nb = ft_itoa(data->dollar);
+            while(nb[iii])
+                new_cmd[ii++] = nb[iii++];
+            free(nb);
+        }
+        new_cmd[ii++] = data->cmd[i++];
+    }
+    new_cmd[ii] = 0;
+    free(data->cmd);
+    data->cmd = new_cmd;
+}
+
+
+
+
+
+
 
 void    manage_dollar(t_data_mini *data)
 {
@@ -106,6 +140,7 @@ void    manage_dollar(t_data_mini *data)
     char *tmp;
     char *res;
 
+    manage_dollar_interog(data);
     tmp = malloc((ft_strlen(data->cmd) + 1) * sizeof(char));
     initial_vars(&i , &ii , new_cmd);
     while(data->cmd[i])

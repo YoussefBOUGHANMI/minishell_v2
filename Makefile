@@ -5,7 +5,7 @@ SRCS		= minishell.c split_cmd.c clean_quotes.c outils/outils.c \
 			parsing/p_split.c parsing/p_manage_quote_pipe.c  parsing/p_outils_2.c  parsing/p_verif_2.c \
 			find_path/find_path.c manage_dollar.c manage_redir_out.c manage_redir_in.c \
 			builtins/b_builtins.c builtins/b_cd.c builtins/b_echo.c builtins/b_env.c builtins/b_outils.c builtins/b_pwd.c \
-			builtins/b_export.c builtins/b_unset.c \
+			builtins/b_export.c builtins/b_unset.c signaux.c
 
 CC			= gcc
 C_FLAGS		= 

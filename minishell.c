@@ -73,28 +73,19 @@ void	ft_open_close_pipe(t_cmd *cmd , int i , int nb_cmd)
 
 void	ft_run_pipe(t_data_mini *data , int i)
 {
-	/*if(ft_is_builtin(data->list_cmd->list_token[0]) == 1)
-	{
-		ft_run_builtin(data);
-		exit(1);
-	}
-	else */if(data->list_cmd->top_redir == 1)
-	{
+	if(data->list_cmd->top_redir == 1)
 		ft_open_close_pipe_red(data->list_cmd , i , data->nb_cmd);
-		execve(data->list_cmd->cmd_path, (char *const *)data->list_cmd->cmd_redir, data->env);
-	}
 	else
-	{
 		ft_open_close_pipe(data->list_cmd , i , data->nb_cmd);
+
+	if(ft_is_builtin_2(data->list_cmd->list_token[0]) == 1)
+		ft_run_builtin_2(data);
+	else if(data->list_cmd->top_redir == 1)
+		execve(data->list_cmd->cmd_path, (char *const *)data->list_cmd->cmd_redir, data->env);
+	else
 		execve(data->list_cmd->cmd_path, (char *const *)data->list_cmd->list_token, data->env);
-	}
+	exit(1);
 }
-
-
-
-
-
-
 
 
 void    ft_command(t_data_mini *data)
@@ -120,33 +111,11 @@ void    ft_command(t_data_mini *data)
     }
 	if(i != 1)
 		close_all_pipe(data->list_cmd, i -1 );
-    while (waitpid(0, NULL, 0) != -1);
+    while (waitpid(0, &data->dollar, 0) != -1);
 	if(fork_error == 1)
 		printf("zsh: fork failed: resource temporarily unavailable\n");
 }
 
-
-
-
-
-int		ft_find_path(t_data_mini *data)
-{
-	int i;
-
-	i=0;
-	while(i<data->nb_cmd)
-	{
-		data->list_cmd->cmd_path = get_cmd_path(data->env, data->list_cmd->list_token[0]);
-		if(data->list_cmd->cmd_path == NULL)
-		{
-			printf("command not found %s\n" , data->list_cmd->list_token[0]);
-			return(0);
-		}
-		data->list_cmd = data->list_cmd->next;
-		i++;
-	}
-	return(1);
-}
 
 void ft_clean_all(t_data_mini *data)
 {
@@ -157,7 +126,8 @@ void ft_clean_all(t_data_mini *data)
 	while(i < data->nb_cmd - 1 )
 	{
 		current = data->list_cmd;
-		free(current->cmd_path);
+		if(current->top_path == 1)
+			free(current->cmd_path);
 		free(current->list_token);
 		if(current->top_redir)
 			free(current->cmd_redir);
@@ -165,7 +135,8 @@ void ft_clean_all(t_data_mini *data)
 		data->list_cmd = data->list_cmd->next;
 		i++;
 	}
-	free(data->list_cmd->cmd_path);
+	if(data->list_cmd->top_path == 1)
+		free(data->list_cmd->cmd_path);
 	free(data->list_cmd->list_token);
 	if(data->list_cmd->top_redir)
 			free(data->list_cmd->cmd_redir);
@@ -222,14 +193,14 @@ int	main(int ac, char **av, char **env)
 	t_data_mini	data;
 	
 	data.env = ft_init_env(env);
-	data.home = malloc(4850);
-	getwd(data.home);
+	data.dollar = 0;
 	data.prompt = "MonkeyShell >> ";
 	
 	while (42)
 	{
 		run_shell(&data);
-		//printf("%s", data.home);
+		if(data.dollar == 256)
+			data.dollar = 1;
 	}
 	return (0);
 }

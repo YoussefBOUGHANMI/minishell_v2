@@ -12,78 +12,171 @@
 
 #include "../minishell.h"
 
-char **new_env(t_data_mini *data, char *var)
+char *get_var_to_add(char   *str)
 {
-    int i = 0;
-    char **new_env;
-    while (data->env[i])
-        i++;
-    new_env = malloc((sizeof(char *))*(i+2));
+    char *var;
+    int i;
+
     i = 0;
-    while(data->env[i])
+    while(str[i] && str[i]!= '=')
+        i++;
+    var = malloc((i + 1) * sizeof(char));
+    i = 0;
+    while(str[i] && str[i]!= '=')
     {
-        new_env[i] = data->env[i];
+        var[i] = str[i];
         i++;
     }
-    new_env[i] = var;
-    new_env[i+1] = 0;
-    free(data->env);
+    var[i] = '\0';
+    return(var);
+}
+
+char **malloc_new_env_export(char **env , char *var_to_add)
+{
+    char    **new_env;
+    char    *var_to_check;
+    int i;
+    int top_var_exist;
+    
+     i = 0;
+    while(env[i])
+    {
+        var_to_check = get_var_to_add(env[i]);
+        if(ft_strcmp(var_to_add , var_to_check) == 0)
+            top_var_exist = 1;
+        free(var_to_check);
+        i++;
+    }
+    if(top_var_exist == 1)
+        new_env = malloc((i + 1) * sizeof(char *));
+    else 
+        new_env = malloc((i + 2) * sizeof(char *));
     return(new_env);
 }
 
 
-int ft_check_export(t_data_mini *data)
+
+int    ft_export_var_bis_1(t_data_mini *data, char **new_env , int *i , char *token)
 {
-	int i;
-	char c;
+    char    *var_to_add;
+    char    *var_to_check;
+    int     top_var_exist;
 
-	i = 0;
-	if (data->list_cmd->list_token[1][i] >= '0' && data->list_cmd->list_token[1][i] <= '9')
-		return(0);
-	while(data->list_cmd->list_token[1][i])
-	{
-		c = (data->list_cmd->list_token[1][i]);
-		if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
-			|| (c >= '0' && c <= '9') || c == '_' || c == '=')
-			;
-		else
-			return(0);
-		i++;
-	}
-	return(1);
-}
 
-int ft_export(t_data_mini *data)
-{
-    int i = 0;
-    char *var;
-    int a;
-
-	if (ft_check_export(data) == 0)
-	{
-		printf("\"%s\": not a valid identifier\n", data->list_cmd->list_token[1]);
-		return(0);
-	}
-    while(data->list_cmd->list_token[1][i] != '=' && data->list_cmd->list_token[1][i])
-        i++;
-    if(data->list_cmd->list_token[1][i] == '=')
+    top_var_exist = 0;
+    var_to_add = get_var_to_add(token);
+    while(data->env[*i])
     {
-        var = malloc(sizeof(char)* i+1);
-        var[i] = '\0';
-        i = 0;
-        while(data->list_cmd->list_token[1][i] != '=' && data->list_cmd->list_token[1][i])
+        var_to_check = get_var_to_add(data->env[*i]);
+        if(ft_strcmp(var_to_add , var_to_check) == 0)
         {
-            var[i] = data->list_cmd->list_token[1][i];
-            i++;
-        }
-        a = ft_search_pwd(data, var);
-        if (a != -1)
-        {
-            free(data->env[a]);
-            data->env[a] = data->list_cmd->list_token[1];
+            new_env[*i] = ft_strdup(token);
+            top_var_exist = 1;
         }
         else
-            data->env = new_env(data, data->list_cmd->list_token[1]);
+            new_env[*i] = ft_strdup(data->env[*i]);
+        free(var_to_check);
+        *i = *i+1;
     }
-	return(1);
+    free(var_to_add);
+    return(top_var_exist);
+}
+
+void    ft_export_var_bis_2(int i ,char *token , int top_var_exist , char **new_env)
+{
+    if(top_var_exist == 0)
+    {
+        new_env[i] = ft_strdup(token);
+        i++;
+    }
+    new_env[i] = 0;
+}
+
+
+void    ft_export_var(t_data_mini *data ,char *token)
+{
+    int     i;
+    char    *var_to_add;
+    char    **new_env;
+    int     top_var_exist;
+
+    i = 0;
+    var_to_add = get_var_to_add(token);
+    new_env = malloc_new_env_export(data->env , var_to_add);
+    free(var_to_add);
+    top_var_exist = ft_export_var_bis_1(data , new_env , &i , token);
+    ft_export_var_bis_2(i , token , top_var_exist , new_env);
+    ft_free_tab(data->env);
+    data->env = new_env;
+}
+
+int  is_valid_char(char c)
+{
+    if((c >= '0' && c<='9'))
+        return(1);
+    if((c >= 'a' && c<='z'))
+        return(1);    
+    if((c >= 'A' && c<='Z'))
+        return(1);    
+    return(0);
+}
+
+
+int  is_only_digit(char *token)
+{
+    int i;
+
+    i = 0;
+    while(token[i] && token[i] != '=')
+    {
+        if((token[i] < '0' || token[i] > '9'))
+            return(0);
+        i++;
+    }
+    return(1);
+}
+
+int verif_token_export(char *token)
+{
+    int i;
+
+    i = 0;
+    if(is_only_digit(token) == 1)
+    {
+        printf("export: `%s': not a valid identifier \n" , token);
+        return(0);
+    }
+    i = 0;
+    while(token[i] && token[i] != '=')
+    {
+        if(is_valid_char(token[i]) == 0)
+        {
+            printf("export: `%s': not a valid identifier \n" , token);
+            return(0);
+        }
+        i++;
+    }
+    return(1);
+}
+
+void    ft_export(t_data_mini *data)
+{
+    int i = 1;
+
+    while(data->list_cmd->list_token[i])
+    {
+        if(verif_token_export(data->list_cmd->list_token[i]) == 0 )
+        {
+            data->dollar = 1;
+            return;
+        }
+        i++;
+    }
+    i = 1;
+    while(data->list_cmd->list_token[i])
+    {
+        ft_export_var(data , data->list_cmd->list_token[i]);
+        i++;
+    }
+    data->dollar = 0;
 }

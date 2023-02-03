@@ -14,8 +14,6 @@
 
 void	ft_pwd(t_data_mini *data)
 {
-	int i = 0;
-
-	i = ft_search_pwd(data, "PWD");
-    printf("%s\n", data->env[i]);
+    printf("%s\n", getcwd(NULL, 0));
+    exit(0);
 }
